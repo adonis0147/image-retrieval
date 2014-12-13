@@ -1,4 +1,4 @@
-SUBDIRS = src benchmark
+SUBDIRS = src benchmark preprocess
 
 .PHONY: build, clean, $(SUBDIRS)
 
