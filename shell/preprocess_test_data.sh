@@ -1,5 +1,7 @@
 #!/bin/bash
 
+mkdir -p ../data
+
 ./generate_test_data.py --input=/home/adonis/Downloads/grad/split/features_jd_test.txt \
                         --output=../data/features_jd_test1.dat \
                         --dimension=4096

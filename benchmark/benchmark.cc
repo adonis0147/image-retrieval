@@ -60,7 +60,7 @@ std::vector<int> LinearQuery(const uint8_t *query, int max_num, int max_dis,
                              const uint8_t *data, int num_data, int dim) {
   std::vector<int> results;
   std::vector<int> *results_per_distances = new(std::nothrow)
-                                            std::vector<int> [max_dis + 1];
+      std::vector<int> [max_dis + 1];
   if (results_per_distances == NULL) return results;
 
   for (int i = 0; i < num_data; ++ i) {
@@ -128,7 +128,7 @@ int main(int argc, char *argv[]) {
 
   int c;
   while ((c = getopt_long(argc, argv, "s:t:d:b:r:k:",
-          long_options, NULL)) != EOF) {
+                          long_options, NULL)) != EOF) {
     switch(c) {
       case 's':
         memcpy(train_file, optarg, strlen(optarg));
@@ -192,7 +192,7 @@ int main(int argc, char *argv[]) {
 
   for (int i = 0; i < num_test_data; ++ i) {
     printf("\r%d / %d (%.2lf%%)", i + 1, num_test_data,
-        (i + 1) * 100.0 / num_test_data);
+           (i + 1) * 100.0 / num_test_data);
     fflush(stdout);
 
     const uint8_t *query = test_data + dim * i;

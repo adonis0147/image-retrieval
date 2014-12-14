@@ -29,13 +29,13 @@ struct Partition {
 void Help();
 inline int GetLines(const char *file_name);
 inline void Transform(const std::string &line, int dim,
-               std::vector<int> &features);
+                      std::vector<int> &features);
 inline void FillChunks(const std::vector<int> &features,
-                uint8_t *chunks);
+                       uint8_t *chunks);
 inline void LoadData(const char *file, int dim,
                      std::vector<std::vector<int> > &data);
 inline void CalOnesPerColumn(const std::vector<std::vector<int> > &data,
-                      int dim, int *num_ones);
+                             int dim, int *num_ones);
 void ProcessDataWithoutStrategy(const char *input_file,
                                 const char *output_file, int dim);
 void ProcessDataWithStrategy(const char *input_file,
@@ -49,7 +49,7 @@ inline void Divide(const std::vector<std::pair<int, int> > &scores,
                    std::priority_queue<Partition> &holder,
                    std::priority_queue<Partition> &remainder);
 inline void WriteMappingFile(const char *mapping_file,
-                      const std::vector<int> &mapping);
+                             const std::vector<int> &mapping);
 
 void Help() {
   fprintf(stderr, "Invalid argument!\n");
@@ -88,7 +88,7 @@ inline void Transform(const std::string &line, int dim,
 }
 
 inline void FillChunks(const std::vector<int> &features,
-                uint8_t *chunks) {
+                       uint8_t *chunks) {
   for (size_t i = 0; i < features.size(); i += 8) {
     uint32_t num = 0;
     for (int j = 0; j < 8; ++ j) {
@@ -127,7 +127,7 @@ void ProcessDataWithoutStrategy(const char *input_file,
 }
 
 inline void LoadData(const char *file, int dim,
-              std::vector<std::vector<int> > &data) {
+                     std::vector<std::vector<int> > &data) {
   std::ifstream fin(file);
   std::string line;
 
@@ -143,7 +143,7 @@ inline void LoadData(const char *file, int dim,
 }
 
 inline void CalOnesPerColumn(const std::vector<std::vector<int> > &data,
-                      int dim, int *num_ones) {
+                             int dim, int *num_ones) {
   memset(num_ones, 0, sizeof(int) * dim);
   for (size_t i = 0; i < data.size(); ++ i) {
     const std::vector<int> &item = data[i];
@@ -174,7 +174,7 @@ inline void Divide(const std::vector<std::pair<int, int> > &scores,
 }
 
 std::vector<int> DivideAndGetMapping(std::vector<std::pair<int, int> > scores,
-                int num_partitions) {
+                                     int num_partitions) {
   std::sort(scores.begin(), scores.end(),
             std::greater<std::pair<int, int> >());
 
@@ -326,7 +326,7 @@ int main(int argc, char *argv[]) {
     printf("the number of partitions:\t%d\n", num_partitions);
   }
 
-  ///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
 
   if (!optimized) ProcessDataWithoutStrategy(input_file, output_file, dim);
   else ProcessDataWithStrategy(input_file, output_file, mapping_file,

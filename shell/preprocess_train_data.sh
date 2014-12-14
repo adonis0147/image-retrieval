@@ -1,5 +1,7 @@
 #!/bin/bash
 
+mkdir -p ../data
+
 ../bin/preprocess --input=/home/adonis/Downloads/grad/split/features_jd_train.txt \
                   --output=../data/features_jd_train1.dat \
                   --dimension=4096
