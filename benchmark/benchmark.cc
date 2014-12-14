@@ -21,8 +21,8 @@ bool Read(const char *file_name, const int dim,
 std::vector<int> LinearQuery(const uint8_t *query, int max_num, int max_dis,
                              const uint8_t *data, int num_data, int dim);
 int CalCorrectItems(const uint8_t *query, const uint8_t *train_data,
-                    int num_train_data, const std::vector<int> mih_results,
-                    const std::vector<int> linear_results);
+                    int num_train_data, const std::vector<int> &mih_results,
+                    const std::vector<int> &linear_results);
 
 void Help() {
   fprintf(stderr, "Invalid argument!\n");
@@ -85,8 +85,8 @@ out:
 }
 
 int CalCorrectItems(const uint8_t *query, const uint8_t *train_data, int dim,
-                    const std::vector<int> mih_results,
-                    const std::vector<int> linear_results) {
+                    const std::vector<int> &mih_results,
+                    const std::vector<int> &linear_results) {
   std::set<int> correct_set;
   int max_dis_in_correct_set = 0;
   int num_correct_items = 0;
