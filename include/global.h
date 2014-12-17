@@ -6,6 +6,7 @@
 #include <assert.h>
 #include <cstdio>
 #include <cmath>
+#include <vector>
 
 #define DISALLOW_COPY_AND_ASSIGN(TypeName) \
     TypeName(const TypeName &); \
@@ -59,5 +60,10 @@ inline int Match(const uint8_t *u, const uint8_t *v, int dim) {
   return hamming_dis;
 }
 } /* bitops */
+
+bool Read(const char *file_name, const int dim,
+          uint8_t *&samples, int &num_samples);
+std::vector<int> LinearQuery(const uint8_t *query, int max_num, int max_dis,
+                             const uint8_t *data, int num_data, int dim);
 
 #endif

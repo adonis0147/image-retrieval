@@ -1,7 +1,7 @@
 .PHONY: build, clean
 
 build:
-	g++ preprocess.cc -o preprocess
+	g++ -O3 preprocess.cc -o preprocess
 	@mv preprocess ../bin
 
 clean:
