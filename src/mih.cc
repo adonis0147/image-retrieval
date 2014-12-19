@@ -21,7 +21,7 @@ void MIH::Build() {
 }
 
 void MIH::Query(const uint8_t *query, int search_radius, Result &result) {
-  static uint32_t *chunks = new(std::nothrow) uint32_t[num_bucket_groups_];
+  uint32_t *chunks = new(std::nothrow) uint32_t[num_bucket_groups_];
   if (chunks == NULL) return;
 
   bitops::Split(query, dim_, num_bucket_groups_, chunks);
@@ -57,5 +57,6 @@ void MIH::Query(const uint8_t *query, int search_radius, Result &result) {
   }
 
 out:
-  return;
+  delete[] chunks;
+  chunks = NULL;
 }
