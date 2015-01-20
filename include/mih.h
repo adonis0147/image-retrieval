@@ -12,17 +12,14 @@ class MIH {
     MIH(const uint8_t *data, int num_data, int dim, size_t num_bucket_groups)
         : data_(data), num_data_(num_data), dim_(dim),
           num_bucket_groups_(num_bucket_groups),
-          bucket_groups_(new(std::nothrow) BucketGroup *[num_bucket_groups]),
+          bucket_groups_(new BucketGroup *[num_bucket_groups]),
           bucket_bits_(ceil(dim * 8 / (num_bucket_groups + 1e-8))) {
       remainder_index_ = dim * 8 - num_bucket_groups * (bucket_bits_ - 1);
-      if (data_ == NULL || bucket_groups_ == NULL)
-        num_data_ = num_bucket_groups_ = 0;
-
       for (size_t i = 0; i < num_bucket_groups_; ++ i) {
         if (i < remainder_index_)
-          bucket_groups_[i] = new(std::nothrow) BucketGroup(bucket_bits_);
+          bucket_groups_[i] = new BucketGroup(bucket_bits_);
         else
-          bucket_groups_[i] = new(std::nothrow) BucketGroup(bucket_bits_ - 1);
+          bucket_groups_[i] = new BucketGroup(bucket_bits_ - 1);
       }
 
       Build();

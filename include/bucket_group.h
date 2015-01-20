@@ -9,9 +9,7 @@ class BucketGroup {
   public:
     explicit BucketGroup(int bucket_bits)
         : bucket_bits_(bucket_bits), num_buckets_(1u << bucket_bits),
-          buckets_(new(std::nothrow) std::vector<int>[1u << bucket_bits]) {
-      if (buckets_ == NULL) num_buckets_ = 0;
-    }
+          buckets_(new std::vector<int>[1u << bucket_bits]) {}
 
     ~BucketGroup() {
       delete[] buckets_;
@@ -34,7 +32,7 @@ class BucketGroup {
 };
 
 inline void BucketGroup::Insert(size_t bucket_id, int value) {
-  if (buckets_ == NULL || bucket_id > num_buckets_) return;
+  if (bucket_id > num_buckets_) return;
   buckets_[bucket_id].push_back(value);
 }
 

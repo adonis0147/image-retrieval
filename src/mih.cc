@@ -5,8 +5,7 @@
 #include <vector>
 
 void MIH::Build() {
-  uint32_t *chunks = new(std::nothrow) uint32_t[num_bucket_groups_];
-  if (chunks == NULL) return;
+  uint32_t *chunks = new uint32_t[num_bucket_groups_];
 
   for (int i = 0; i < num_data_; ++ i) {
     const uint8_t *item = data_ + dim_ * i;
@@ -21,8 +20,7 @@ void MIH::Build() {
 }
 
 void MIH::Query(const uint8_t *query, int search_radius, Result &result) {
-  uint32_t *chunks = new(std::nothrow) uint32_t[num_bucket_groups_];
-  if (chunks == NULL) return;
+  uint32_t *chunks = new uint32_t[num_bucket_groups_];
 
   bitops::Split(query, dim_, num_bucket_groups_, chunks);
   size_t total_num = 0;

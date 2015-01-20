@@ -11,8 +11,7 @@ bool Read(const char *file_name, const int dim,
 
   num_samples = 0;
   fin.read((char *)&num_samples, sizeof(num_samples));
-  samples = new(std::nothrow) uint8_t[num_samples * dim];
-  if (samples == NULL) goto error;
+  samples = new uint8_t[num_samples * dim];
   fin.read((char *)samples, sizeof(uint8_t) * (num_samples * dim));
 
   fin.close();
@@ -22,15 +21,14 @@ error:
   fprintf(stderr, "Read data from file failed[%s]: %s\n",
           file_name, strerror(errno));
   fin.close();
+  samples = NULL;
   return false;
 }
 
 std::vector<int> LinearQuery(const uint8_t *query, int max_num, int max_dis,
                              const uint8_t *data, int num_data, int dim) {
   std::vector<int> results;
-  std::vector<int> *results_per_distances = new(std::nothrow)
-      std::vector<int> [max_dis + 1];
-  if (results_per_distances == NULL) return results;
+  std::vector<int> *results_per_distances = new std::vector<int> [max_dis + 1];
 
   for (int i = 0; i < num_data; ++ i) {
     const uint8_t *item = data + dim * i;

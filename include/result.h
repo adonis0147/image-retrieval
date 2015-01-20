@@ -10,10 +10,8 @@ class Result {
   public:
     Result(size_t max_num, size_t max_distance, size_t num_data)
         : max_num_(max_num), max_distance_(max_distance), num_data_(num_data),
-          is_duplicate_(new(std::nothrow) bool[num_data]()),
-          results_per_distance_(new(std::nothrow)
-                                std::vector<int>[max_distance + 1]) {
-      if (results_per_distance_ == NULL) return;
+          is_duplicate_(new bool[num_data]()),
+          results_per_distance_(new std::vector<int>[max_distance + 1]) {
       for (size_t i = 0; i <= max_distance_; ++ i)
         results_per_distance_[i].reserve(max_num_);
     }
@@ -46,12 +44,11 @@ class Result {
 };
 
 inline bool Result::IsDuplicateItem(size_t id) const {
-  if (is_duplicate_ == NULL || id >= num_data_) return true;
+  if (id >= num_data_) return true;
   return is_duplicate_[id];
 }
 
 inline void Result::AddOrIgnore(size_t id, size_t distance) {
-  if (is_duplicate_ == NULL || results_per_distance_ == NULL) return;
   if (id >= num_data_) return;
   if (!is_duplicate_[id] && distance <= max_distance_) {
     std::vector<int> &results = results_per_distance_[distance];
@@ -62,12 +59,11 @@ inline void Result::AddOrIgnore(size_t id, size_t distance) {
 }
 
 inline int Result::GetResultsNumAtDistance(size_t distance) const {
-  if (results_per_distance_ == NULL || distance > max_distance_) return 0;
+  if (distance > max_distance_) return 0;
   return results_per_distance_[distance].size();
 }
 
 inline int Result::GetSizeOfItems() const {
-  if (is_duplicate_ == NULL) return 0;
   int total_num = 0;
   for (size_t i = 0; i < num_data_; ++ i)
     total_num += is_duplicate_[i];
