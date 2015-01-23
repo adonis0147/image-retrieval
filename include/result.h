@@ -1,5 +1,5 @@
-#ifndef MIH_SRC_RESULT
-#define MIH_SRC_RESULT
+#ifndef IR_INCLUDE_RESULT_H
+#define IR_INCLUDE_RESULT_H
 #pragma once
 
 #include "global.h"

@@ -1,5 +1,5 @@
-#ifndef MIH_SRC_BUCKET_GROUP
-#define MIH_SRC_BUCKET_GROUP
+#ifndef IR_INCLUDE_BUCKET_GROUP_H
+#define IR_INCLUDE_BUCKET_GROUP_H
 #pragma once
 
 #include "global.h"
