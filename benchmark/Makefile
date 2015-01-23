@@ -13,14 +13,14 @@ INCLUDE = -I../include
 .PHONY: build, clean
 
 build: $(OBJ_FILES)
-	$(CC) $(LFLAG) $(INCLUDE) $^ $(LIB_FILES) -o $(BIN_FILE)
+	$(CC) $(LDFLAGS) $^ $(LIB_FILES) -o $(BIN_FILE)
 	@mkdir -p $(BIN_FOLDER)
 	@mv $(BIN_FILE) $(BIN_FOLDER)
 	@mkdir -p ./objs
 	@mv $(OBJ_FILES) ./objs
 
 %.o: %.cc
-	$(CC) $(CFLAG) $(INCLUDE) $< -o $@
+	$(CC) $(CFLAGS) $(INCLUDE) $< -o $@
 
 clean:
 	@rm -rf ./objs/*

@@ -3,3 +3,5 @@
 bin
 lib
 data
+benchmark/objs
+src/objs

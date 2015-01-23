@@ -17,7 +17,7 @@ build: $(LIB_FILES)
 	@mv $(LIB_FILES) $(LIB_FOLDER)
 
 %.a: %.cc
-	$(CC) $(CFLAG) $(INCLUDE) $< -o $(patsubst %.a, %.o, $@)
+	$(CC) $(CFLAGS) $(INCLUDE) $< -o $(patsubst %.a, %.o, $@)
 	@ar rvs $@ $(patsubst %.a, %.o, $@)
 
 clean:
