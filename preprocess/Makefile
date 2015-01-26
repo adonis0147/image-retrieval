@@ -5,4 +5,4 @@ build:
 	@mv preprocess ../bin
 
 clean:
-	@rm -rf ../bin/preprocess
+	@rm -f ../bin/preprocess

@@ -1,4 +1,4 @@
-SUBDIRS = src benchmark preprocess
+SUBDIRS = src benchmark preprocess image-retrieval
 
 .PHONY: build, clean, $(SUBDIRS)
 

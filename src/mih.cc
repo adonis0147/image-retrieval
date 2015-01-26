@@ -19,7 +19,7 @@ void MIH::Build() {
   chunks = NULL;
 }
 
-void MIH::Query(const uint8_t *query, int search_radius, Result &result) {
+void MIH::Query(const uint8_t *query, int search_radius, Result &result) const {
   uint32_t *chunks = new uint32_t[num_bucket_groups_];
 
   bitops::Split(query, dim_, num_bucket_groups_, chunks);

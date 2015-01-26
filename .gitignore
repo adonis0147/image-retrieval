@@ -5,3 +5,6 @@ lib
 data
 benchmark/objs
 src/objs
+image-retrieval/objs
+include/libevent
+lib/libevent

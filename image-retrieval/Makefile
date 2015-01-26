@@ -6,21 +6,24 @@ LIB_FOLDER = ../lib
 LIB_FILES = $(wildcard $(LIB_FOLDER)/*.a)
 BIN_FOLDER = ../bin
 
-BIN_FILE = benchmark
+BIN_FILE = ir
 
-INCLUDE = -I../include
+INCLUDE = -I../include \
+		  -I../include/libevent
+LIB = -L../lib/libevent \
+	  -levent
 
 .PHONY: build, clean
 
 build: $(OBJ_FILES)
-	$(CC) $(LDFLAGS) $^ $(LIB_FILES) -o $(BIN_FILE)
+	$(CC) $(LDFLAGS) $< $(LIB_FILES) $(LIB) -o $(BIN_FILE)
 	@mkdir -p $(BIN_FOLDER)
 	@mv $(BIN_FILE) $(BIN_FOLDER)
 	@mkdir -p ./objs
 	@mv $(OBJ_FILES) ./objs
 
 %.o: %.cc
-	$(CC) $(CFLAGS) $(INCLUDE) $< -o $@
+	$(CC) $(INCLUDE) $(CFLAGS) $< -o $@
 
 clean:
 	@rm -f ./objs/*
