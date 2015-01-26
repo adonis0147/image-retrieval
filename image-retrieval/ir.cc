@@ -15,9 +15,32 @@
 #define FILE_NAME_MAX_SIZE 1024
 #define PORT 5000
 #define BACKLOG 32
-#define REQUEST_BUFFER_SIZE 1024
+#define BUFFER_MAX_SIZE 1024
+
+struct Request {
+  int num_neighbors;
+  int search_radius;
+  int dim;
+  uint8_t *data;
+};
+
+struct RequestPackage {
+  struct bufferevent *bev;
+  struct Request *request;
+};
+
+struct Wrapper {
+  struct event_base *base;
+  LockFreeQueue<RequestPackage> *queue;
+};
 
 void Help();
+void StartServer(LockFreeQueue<RequestPackage> &queue);
+void DoAccept(evutil_socket_t listener, short event, void *arg);
+void HandleReadEvent(struct bufferevent *bev, void *arg);
+void HandleErrorEvent(struct bufferevent *bev, short error, void *arg);
+struct Request *CreateRequest(char *buffer, int size);
+void FreeRequestPackage(struct RequestPackage &package);
 
 void Help() {
   fprintf(stderr, "Invalid argument!\n");
@@ -26,6 +49,111 @@ void Help() {
   -t, --test-file\t\t test file\n\
   -d, --dimension\t\t data dimension\n\
   -b, --bucket-groups-num\t the number of bucket groups\n");
+}
+
+void StartServer(LockFreeQueue<RequestPackage> &queue) {
+  struct sockaddr_in server_sockaddr = {
+    .sin_family = AF_INET,
+    .sin_port = htons(PORT),
+  };
+  evutil_socket_t listener = socket(AF_INET, SOCK_STREAM, 0);
+  evutil_make_socket_nonblocking(listener);
+  evutil_make_listen_socket_reuseable(listener);
+
+  if (bind(listener, (struct sockaddr *)&server_sockaddr,
+           sizeof server_sockaddr) || listen(listener, BACKLOG) < 0) {
+    close(listener);
+    return;
+  }
+
+  printf("\nListening: %s:%d\n", inet_ntoa(server_sockaddr.sin_addr),
+         ntohs(server_sockaddr.sin_port));
+
+  event_base *base = event_base_new();
+  struct Wrapper wrapper = {
+    .base = base,
+    .queue = &queue,
+  };
+  event *listen_event = event_new(base, listener, EV_READ | EV_PERSIST,
+                                  DoAccept,
+                                  reinterpret_cast<void *>(&wrapper));
+  event_add(listen_event, NULL);
+  event_base_dispatch(base);
+}
+
+void DoAccept(evutil_socket_t listener, short event, void *arg) {
+  struct Wrapper *wrapper = reinterpret_cast<Wrapper *>(arg);
+  event_base *base = wrapper->base;
+  LockFreeQueue<RequestPackage> *queue = wrapper->queue;
+  struct sockaddr_in client_sockaddr;
+  socklen_t socklen;
+  int fd = accept(listener, (struct sockaddr *)&client_sockaddr, &socklen);
+
+  printf("Connection: %s:%d\n", inet_ntoa(client_sockaddr.sin_addr),
+         ntohs(client_sockaddr.sin_port));
+
+  if (fd < 0) {
+    perror("accept");
+  } else if (fd > FD_SETSIZE) {
+    close(fd);
+  } else {
+    evutil_make_socket_nonblocking(fd);
+    struct bufferevent *bev = bufferevent_socket_new(base, fd,
+                                                     BEV_OPT_CLOSE_ON_FREE);
+    bufferevent_setcb(bev, HandleReadEvent, NULL, HandleErrorEvent,
+                      reinterpret_cast<void *>(queue));
+    bufferevent_enable(bev, EV_READ|EV_WRITE);
+  }
+}
+
+void HandleReadEvent(struct bufferevent *bev, void *arg) {
+  LockFreeQueue<RequestPackage> *queue =
+      reinterpret_cast<LockFreeQueue<RequestPackage> *>(arg);
+  char buffer[BUFFER_MAX_SIZE] = {};
+  int size = bufferevent_read(bev, buffer, BUFFER_MAX_SIZE);
+  struct Request *request = CreateRequest(buffer, size);
+
+  if (request == NULL) {
+    bufferevent_free(bev);
+  } else {
+    struct RequestPackage package = {
+      .bev = bev,
+      .request = request,
+    };
+  }
+}
+
+struct Request *CreateRequest(char *buffer, int size) {
+  if (size <= 0) return NULL;
+
+  struct Request *request = new Request();
+
+  printf("%d\n", size);
+
+  int offset = 0;
+  memcpy((char *)&request->num_neighbors, buffer + offset, sizeof(int));
+
+  offset += sizeof(int);
+  memcpy((char *)&request->search_radius, buffer + offset, sizeof(int));
+
+  offset += sizeof(int);
+  memcpy((char *)&request->dim, buffer + offset, sizeof(int));
+
+  request->data = new uint8_t[request->dim];
+  offset += sizeof(int);
+  memcpy((char *)request->data, buffer + offset,
+         sizeof(uint8_t) * request->dim);
+
+  return request;
+}
+
+void HandleErrorEvent(struct bufferevent *bev, short error, void *arg) {
+  bufferevent_free(bev);
+}
+
+void FreeRequestPackage(struct RequestPackage &package) {
+  delete[] package.request->data;
+  package.request->data = NULL;
 }
 
 int main(int argc, char *argv[]) {
@@ -97,6 +225,10 @@ int main(int argc, char *argv[]) {
   MIH mih(train_data, num_train_data, dim, num_bucket_groups);
 
   printf("Done!\n");
+
+  LockFreeQueue<RequestPackage> queue(0xffff);
+
+  StartServer(queue);
 
   return EXIT_SUCCESS;
 }
