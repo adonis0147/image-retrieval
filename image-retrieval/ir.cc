@@ -9,11 +9,12 @@
 #include <arpa/inet.h>
 #include <unistd.h>
 #include <getopt.h>
+#include <sched.h>
+#include <pthread.h>
 #include <cstdio>
 #include <cstring>
 #include <cstdlib>
 #define FILE_NAME_MAX_SIZE 1024
-#define PORT 5000
 #define BACKLOG 32
 #define BUFFER_MAX_SIZE 1024
 
@@ -34,7 +35,16 @@ struct Wrapper {
   LockFreeQueue<RequestPackage> *queue;
 };
 
+struct Worker {
+  pthread_t id;
+  LockFreeQueue<RequestPackage> *queue;
+  MIH *mih;
+};
+
 void Help();
+void StartWorkers(int num_threads, LockFreeQueue<RequestPackage> &queue,
+                  MIH *mih);
+void *DoWork(void *arg);
 void StartServer(LockFreeQueue<RequestPackage> &queue);
 void DoAccept(evutil_socket_t listener, short event, void *arg);
 void HandleReadEvent(struct bufferevent *bev, void *arg);
@@ -48,13 +58,48 @@ void Help() {
  -s, --train-file\t\t train file\n\
   -t, --test-file\t\t test file\n\
   -d, --dimension\t\t data dimension\n\
-  -b, --bucket-groups-num\t the number of bucket groups\n");
+  -b, --bucket-groups-num\t the number of bucket groups\n\
+  -p, --port\t\t listen port\n\
+  -n, --threads-num");
 }
 
-void StartServer(LockFreeQueue<RequestPackage> &queue) {
+void StartWorkers(int num_threads, LockFreeQueue<RequestPackage> &queue,
+                  MIH &mih) {
+  Worker *workers = new Worker[num_threads];
+  for (int i = 0; i < num_threads; ++ i) {
+    workers[i].queue = &queue;
+    workers[i].mih = &mih;
+  }
+
+  for (int i = 0; i < num_threads; ++ i) {
+    pthread_create(&workers[i].id, NULL, DoWork,
+                   reinterpret_cast<void *>(&workers[i]));
+  }
+}
+
+void *DoWork(void *arg) {
+  Worker *worker = reinterpret_cast<Worker *>(arg);
+  LockFreeQueue<RequestPackage> *queue = worker->queue;
+  MIH *mih = worker->mih;
+  RequestPackage package;
+
+  while(true) {
+    if (queue->pop(package)) {
+      const Request *request = package.request;
+      Result result(request->num_neighbors, request->dim * 8, mih->num_data());
+      mih->Query(request->data, request->search_radius, result);
+      FreeRequestPackage(package);
+    } else {
+      usleep(1000);
+    }
+  }
+  return NULL;
+}
+
+void StartServer(int port, LockFreeQueue<RequestPackage> &queue) {
   struct sockaddr_in server_sockaddr = {
     .sin_family = AF_INET,
-    .sin_port = htons(PORT),
+    .sin_port = htons(port),
   };
   evutil_socket_t listener = socket(AF_INET, SOCK_STREAM, 0);
   evutil_make_socket_nonblocking(listener);
@@ -120,6 +165,10 @@ void HandleReadEvent(struct bufferevent *bev, void *arg) {
       .bev = bev,
       .request = request,
     };
+
+    while (!queue->push(package)) {
+      sched_yield();
+    }
   }
 }
 
@@ -127,8 +176,6 @@ struct Request *CreateRequest(char *buffer, int size) {
   if (size <= 0) return NULL;
 
   struct Request *request = new Request();
-
-  printf("%d\n", size);
 
   int offset = 0;
   memcpy((char *)&request->num_neighbors, buffer + offset, sizeof(int));
@@ -164,11 +211,15 @@ int main(int argc, char *argv[]) {
     {"bucket-groups-num", required_argument, NULL, 'b'},
     {"search-radius", required_argument, NULL, 'r'},
     {"neighbors-num", required_argument, NULL, 'k'},
+    {"port", required_argument, NULL, 'p'},
+    {"threads-num", required_argument, NULL, 'n'},
     {NULL, no_argument, NULL, 0},
   };
 
   char train_file[FILE_NAME_MAX_SIZE] = {}, test_file[FILE_NAME_MAX_SIZE] = {};
   int dim = 0, num_bucket_groups = 0;
+  int port = 5000;
+  int num_threads = 4;
 
   int c;
   while ((c = getopt_long(argc, argv, "s:t:d:b:r:k:",
@@ -186,6 +237,10 @@ int main(int argc, char *argv[]) {
       case 'b':
         sscanf(optarg, "%d", &num_bucket_groups);
         break;
+      case 'p':
+        sscanf(optarg, "%d", &port);
+      case 'n':
+        sscanf(optarg, "%d", &num_threads);
       default:
         break;
     }
@@ -201,23 +256,21 @@ int main(int argc, char *argv[]) {
   printf("test file:\t%s\n", test_file);
   printf("data dimension:\t\t%d\n", dim);
   printf("bucket groups:\t\t%d\n", num_bucket_groups);
+  printf("threads:\t\t%2d\n", num_threads);
 
 ///////////////////////////////////////////////////////////////////////////////
 
-  uint8_t *train_data = NULL, *test_data = NULL;
-  int num_train_data, num_test_data;
+  uint8_t *train_data = NULL;
+  int num_train_data;
 
-  if (!Read(train_file, dim, train_data, num_train_data) ||
-      !Read(test_file, dim, test_data, num_test_data)) {
+  if (!Read(train_file, dim, train_data, num_train_data)) {
     delete[] train_data;
-    delete[] test_data;
-    train_data = test_data = NULL;
+    train_data = NULL;
     return EXIT_FAILURE;
   }
 
   printf("\n");
   printf("the number of train data:\t %d\n", num_train_data);
-  printf("the number of test data:\t %d\n", num_test_data);
 
   printf("\n");
   printf("Initializing ...\n");
@@ -228,7 +281,8 @@ int main(int argc, char *argv[]) {
 
   LockFreeQueue<RequestPackage> queue(0xffff);
 
-  StartServer(queue);
+  StartWorkers(num_threads, queue, mih);
+  StartServer(port, queue);
 
   return EXIT_SUCCESS;
 }

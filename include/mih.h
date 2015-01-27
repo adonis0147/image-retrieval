@@ -37,6 +37,7 @@ class MIH {
 
     size_t num_bucket_groups() const { return num_bucket_groups_; }
     const BucketGroup * const *bucket_groups() const { return bucket_groups_; }
+    int num_data() const { return num_data_; }
 
     void Query(const uint8_t *query, int search_radius, Result &result) const;
 

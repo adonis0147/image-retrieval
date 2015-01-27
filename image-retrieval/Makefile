@@ -11,7 +11,8 @@ BIN_FILE = ir
 INCLUDE = -I../include \
 		  -I../include/libevent
 LIB = -L../lib/libevent \
-	  -levent
+	  -levent \
+	  -pthread
 
 .PHONY: build, clean
 
