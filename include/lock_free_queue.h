@@ -17,7 +17,7 @@ class LockFreeQueue {
   ~LockFreeQueue() {
     delete[] buffer_;
     buffer_ = NULL;
-    read_count_ = write_count_ = last_commit_count_;
+    read_count_ = write_count_ = last_commit_count_ = 0;
   }
 
   bool push(const T &element) {

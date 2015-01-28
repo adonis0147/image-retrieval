@@ -33,6 +33,7 @@ struct RequestPackage {
 struct Wrapper {
   struct event_base *base;
   LockFreeQueue<RequestPackage> *queue;
+  size_t protocol_size;
 };
 
 struct Worker {
@@ -45,7 +46,8 @@ void Help();
 void StartWorkers(int num_threads, LockFreeQueue<RequestPackage> &queue,
                   MIH *mih);
 void *DoWork(void *arg);
-void StartServer(LockFreeQueue<RequestPackage> &queue);
+void StartServer(int port, size_t protocol_size,
+                 LockFreeQueue<RequestPackage> &queue);
 void DoAccept(evutil_socket_t listener, short event, void *arg);
 void HandleReadEvent(struct bufferevent *bev, void *arg);
 void HandleErrorEvent(struct bufferevent *bev, short error, void *arg);
@@ -96,7 +98,8 @@ void *DoWork(void *arg) {
   return NULL;
 }
 
-void StartServer(int port, LockFreeQueue<RequestPackage> &queue) {
+void StartServer(int port, size_t protocol_size,
+                 LockFreeQueue<RequestPackage> &queue) {
   struct sockaddr_in server_sockaddr = {
     .sin_family = AF_INET,
     .sin_port = htons(port),
@@ -118,6 +121,7 @@ void StartServer(int port, LockFreeQueue<RequestPackage> &queue) {
   struct Wrapper wrapper = {
     .base = base,
     .queue = &queue,
+    .protocol_size = protocol_size,
   };
   event *listen_event = event_new(base, listener, EV_READ | EV_PERSIST,
                                   DoAccept,
@@ -130,6 +134,7 @@ void DoAccept(evutil_socket_t listener, short event, void *arg) {
   struct Wrapper *wrapper = reinterpret_cast<Wrapper *>(arg);
   event_base *base = wrapper->base;
   LockFreeQueue<RequestPackage> *queue = wrapper->queue;
+  size_t protocol_size = wrapper->protocol_size;
   struct sockaddr_in client_sockaddr;
   socklen_t socklen;
   int fd = accept(listener, (struct sockaddr *)&client_sockaddr, &socklen);
@@ -147,6 +152,7 @@ void DoAccept(evutil_socket_t listener, short event, void *arg) {
                                                      BEV_OPT_CLOSE_ON_FREE);
     bufferevent_setcb(bev, HandleReadEvent, NULL, HandleErrorEvent,
                       reinterpret_cast<void *>(queue));
+    bufferevent_setwatermark(bev, EV_READ, 0, protocol_size);
     bufferevent_enable(bev, EV_READ|EV_WRITE);
   }
 }
@@ -280,9 +286,10 @@ int main(int argc, char *argv[]) {
   printf("Done!\n");
 
   LockFreeQueue<RequestPackage> queue(0xffff);
+  size_t protocol_size = sizeof(int) * 3 + sizeof(uint8_t) * dim;
 
   StartWorkers(num_threads, queue, mih);
-  StartServer(port, queue);
+  StartServer(port, protocol_size, queue);
 
   return EXIT_SUCCESS;
 }
