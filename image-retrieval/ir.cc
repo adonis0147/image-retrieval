@@ -4,6 +4,7 @@
 #include <event2/util.h>
 #include <event2/event.h>
 #include <event2/bufferevent.h>
+#include <event2/buffer.h>
 #include <netinet/in.h>
 #include <sys/socket.h>
 #include <arpa/inet.h>
@@ -14,6 +15,7 @@
 #include <cstdio>
 #include <cstring>
 #include <cstdlib>
+#include <vector>
 #define FILE_NAME_MAX_SIZE 1024
 #define BACKLOG 32
 #define BUFFER_MAX_SIZE 1024
@@ -51,8 +53,9 @@ void StartServer(int port, size_t protocol_size,
 void DoAccept(evutil_socket_t listener, short event, void *arg);
 void HandleReadEvent(struct bufferevent *bev, void *arg);
 void HandleErrorEvent(struct bufferevent *bev, short error, void *arg);
-struct Request *CreateRequest(char *buffer, int size);
-void FreeRequestPackage(struct RequestPackage &package);
+inline struct Request *CreateRequest(char *buffer, int size);
+inline evbuffer *CreateResponse(const Result &result);
+inline void FreeRequestPackage(struct RequestPackage &package);
 
 void Help() {
   fprintf(stderr, "Invalid argument!\n");
@@ -90,12 +93,33 @@ void *DoWork(void *arg) {
       const Request *request = package.request;
       Result result(request->num_neighbors, request->dim * 8, mih->num_data());
       mih->Query(request->data, request->search_radius, result);
+      evbuffer *response = CreateResponse(result);
+      evbuffer_write(response, bufferevent_getfd(package.bev));
+      evbuffer_free(response);
       FreeRequestPackage(package);
     } else {
       usleep(1000);
     }
   }
   return NULL;
+}
+
+inline evbuffer *CreateResponse(const Result &result) {
+  std::vector<int> items = result.Get();
+  int num_items = items.size();
+  evbuffer *response = evbuffer_new();
+  char buffer[BUFFER_MAX_SIZE] = {};
+
+  memcpy(buffer, (char *)&num_items, sizeof(int));
+  int buffer_size = sizeof(int);
+  for (int i = 0; i < num_items; ++ i) {
+    int id = items[i];
+    memcpy(buffer + buffer_size, (char *)&id, sizeof(int));
+    buffer_size += sizeof(int);
+  }
+
+  evbuffer_add(response, buffer, buffer_size);
+  return response;
 }
 
 void StartServer(int port, size_t protocol_size,
@@ -178,7 +202,7 @@ void HandleReadEvent(struct bufferevent *bev, void *arg) {
   }
 }
 
-struct Request *CreateRequest(char *buffer, int size) {
+inline struct Request *CreateRequest(char *buffer, int size) {
   if (size <= 0) return NULL;
 
   struct Request *request = new Request();
@@ -204,7 +228,7 @@ void HandleErrorEvent(struct bufferevent *bev, short error, void *arg) {
   bufferevent_free(bev);
 }
 
-void FreeRequestPackage(struct RequestPackage &package) {
+inline void FreeRequestPackage(struct RequestPackage &package) {
   delete[] package.request->data;
   package.request->data = NULL;
 }
