@@ -28,7 +28,7 @@ struct Request {
 };
 
 struct RequestPackage {
-  struct bufferevent *bev;
+  int fd;
   struct Request *request;
 };
 
@@ -94,7 +94,7 @@ void *DoWork(void *arg) {
       Result result(request->num_neighbors, request->dim * 8, mih->num_data());
       mih->Query(request->data, request->search_radius, result);
       evbuffer *response = CreateResponse(result);
-      evbuffer_write(response, bufferevent_getfd(package.bev));
+      evbuffer_write(response, package.fd);
       evbuffer_free(response);
       FreeRequestPackage(package);
     } else {
@@ -192,7 +192,7 @@ void HandleReadEvent(struct bufferevent *bev, void *arg) {
     bufferevent_free(bev);
   } else {
     struct RequestPackage package = {
-      .bev = bev,
+      .fd = bufferevent_getfd(bev),
       .request = request,
     };
 
