@@ -21,7 +21,7 @@ build: $(LIB_FILES)
 	@ar rvs $@ $(patsubst %.a, %.o, $@)
 
 clean:
-	@rm -rf $(OBJ_FILES)
-	@rm -rf $(OBJ_FOLDER)/*
-	@rm -rf $(LIB_FILES)
-	@rm -rf $(LIB_FOLDER)/*
+	@rm -f $(OBJ_FILES)
+	@rm -f $(OBJ_FOLDER)/*
+	@rm -f $(LIB_FILES)
+	@rm -f $(LIB_FOLDER)/*.a
