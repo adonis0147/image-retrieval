@@ -252,7 +252,7 @@ int main(int argc, char *argv[]) {
   int num_threads = 4;
 
   int c;
-  while ((c = getopt_long(argc, argv, "s:t:d:b:r:k:",
+  while ((c = getopt_long(argc, argv, "s:t:d:b:r:k:p:n:",
                           long_options, NULL)) != EOF) {
     switch(c) {
       case 's':
@@ -269,8 +269,10 @@ int main(int argc, char *argv[]) {
         break;
       case 'p':
         sscanf(optarg, "%d", &port);
+        break;
       case 'n':
         sscanf(optarg, "%d", &num_threads);
+        break;
       default:
         break;
     }
