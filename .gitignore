@@ -6,5 +6,9 @@ data
 benchmark/objs
 src/objs
 image-retrieval/objs
+mongodb/objs
 include/libevent
+include/libbson
+include/libmongoc
 lib/libevent
+lib/mongo-c-driver

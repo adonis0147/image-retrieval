@@ -1,4 +1,4 @@
-SUBDIRS = src benchmark preprocess image-retrieval
+SUBDIRS = src benchmark preprocess image-retrieval mongodb
 
 .PHONY: build, clean, $(SUBDIRS)
 
