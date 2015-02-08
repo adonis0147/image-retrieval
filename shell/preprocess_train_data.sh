@@ -2,15 +2,15 @@
 
 mkdir -p ../data
 
-../bin/preprocess --input=/home/adonis/Downloads/data/features_jd_train.txt \
+../bin/preprocess --input=/home/adonis/Downloads/jd_info/features_train.txt \
                   --output=../data/features_jd_train1.dat \
-                  --dimension=4096
+                  --dimension=1024
 
 echo
 
-../bin/preprocess --input=/home/adonis/Downloads/data/features_jd_train.txt \
+../bin/preprocess --input=/home/adonis/Downloads/jd_info/features_train.txt \
                   --output=../data/features_jd_train2.dat \
                   --mapping-file=../data/mapping.dat \
-                  --dimension=4096 --optimize --num-partitions=205
+                  --dimension=1024 --optimize --num-partitions=55
 
 echo

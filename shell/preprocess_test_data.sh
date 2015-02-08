@@ -2,15 +2,15 @@
 
 mkdir -p ../data
 
-./generate_test_data.py --input=/home/adonis/Downloads/data/features_jd_test.txt \
+./generate_test_data.py --input=/home/adonis/Downloads/jd_info/features_test.txt \
                         --output=../data/features_jd_test1.dat \
-                        --dimension=4096
+                        --dimension=1024
 
 echo
 
-./generate_test_data.py --input=/home/adonis/Downloads/data/features_jd_test.txt \
+./generate_test_data.py --input=/home/adonis/Downloads/jd_info/features_test.txt \
                         --output=../data/features_jd_test2.dat \
                         --mapping-file=../data/mapping.dat \
-                        --dimension=4096
+                        --dimension=1024
 
 echo
