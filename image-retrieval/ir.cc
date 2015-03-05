@@ -64,8 +64,8 @@ void Help() {
   -t, --test-file\t\t test file\n\
   -d, --dimension\t\t data dimension\n\
   -b, --bucket-groups-num\t the number of bucket groups\n\
-  -p, --port\t\t listen port\n\
-  -n, --threads-num");
+  -p, --port\t\t\t listen port\n\
+  -n, --threads-num\t\t the number of threads\n");
 }
 
 void StartWorkers(int num_threads, LockFreeQueue<RequestPackage> &queue,
