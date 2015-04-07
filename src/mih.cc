@@ -25,8 +25,9 @@ void MIH::Query(const uint8_t *query, int search_radius, Result &result) const {
   bitops::Split(query, dim_, num_bucket_groups_, chunks);
   size_t total_num = 0;
   uint32_t permutation_mask;
+  int search_radius_per_bucket_group = search_radius / num_bucket_groups_;
 
-  for (int d = 0; d <= search_radius; ++ d) {
+  for (int d = 0; d <= search_radius_per_bucket_group; ++ d) {
     for (size_t i = 0; i < num_bucket_groups_; ++ i) {
       const std::vector<int> *buckets = bucket_groups_[i]->buckets();
 
@@ -49,8 +50,9 @@ void MIH::Query(const uint8_t *query, int search_radius, Result &result) const {
         else mask = bitops::NextPermutaion(mask);
       }
 
-      total_num += result.GetResultsNumAtDistance(d * num_bucket_groups_ + i);
-      if (total_num >= result.max_num()) goto out;
+      int dis = d * num_bucket_groups_ + i;
+      total_num += result.GetResultsNumAtDistance(dis);
+      if (total_num >= result.max_num() || dis >= search_radius) goto out;
     }
   }
 
