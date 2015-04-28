@@ -72,9 +72,12 @@ int main(int argc, char *argv[]) {
   while (std::getline(fin, line)) {
     std::istringstream sin(line);
     sin >> info;
+    std::string file_path = info.substr(24);
+    int pos = file_path.find('/');
+    std::string file_name = file_path.substr(pos + 1);
     bson_t *doc = bson_new();
     BSON_APPEND_INT32(doc, "id", index ++);
-    BSON_APPEND_UTF8(doc, "path", info.c_str());
+    BSON_APPEND_UTF8(doc, "path", file_name.c_str());
     if (!mongoc_collection_insert(collection, MONGOC_INSERT_NONE,
                                   doc, NULL, &error)) {
       printf("%s\n", error.message);

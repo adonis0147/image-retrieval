@@ -76,7 +76,7 @@ int main() {
 
   mongoc_init();
   mongoc_client_t *client = mongoc_client_new("mongodb://localhost:27017/");
-  mongoc_collection_t *collection = mongoc_client_get_collection(client, "jd", "jd_info");
+  mongoc_collection_t *collection = mongoc_client_get_collection(client, "jd", "jd_info_train");
 
   bson_t *fields = bson_new();
   BSON_APPEND_INT32(fields, "_id", 0);

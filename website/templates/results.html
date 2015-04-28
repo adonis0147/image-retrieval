@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+
+{% block title %}
+{{ home_title  }}
+{% end %}
+
+{% block content %}
+{% for item in items %}
+    <a href="{{ item['url'] }}">
+        <img src="/static/jd/jd_data_all_in_one/{{ item['path'] }}" alt="{{ item['id'] }}">
+    </a>
+{% end %}
+{% end %}
+
